@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Lịch sử đặt vé')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container mt-4">
+    <h2 class="mb-4"><i class="bi bi-clock-history"></i> Lịch sử đặt vé</h2>
+
+    <div th:if="${#lists.isEmpty(bookings)}" class="alert alert-info">
+        Bạn chưa có đặt vé nào.
+    </div>
+
+    <div class="table-responsive" th:if="${!#lists.isEmpty(bookings)}">
+        <table class="table table-hover">
+            <thead class="table-primary">
+                <tr>
+                    <th>Mã đặt vé</th>
+                    <th>Ngày đặt</th>
+                    <th>Tổng tiền</th>
+                    <th>Trạng thái</th>
+                    <th>Thanh toán</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="booking : ${bookings}">
+                    <td th:text="'#' + ${booking.bookingId}"></td>
+                    <td th:text="${#temporals.format(booking.bookingDate, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td th:text="${#numbers.formatDecimal(booking.totalAmount, 0, 'COMMA', 0, 'POINT') + ' VND'}"></td>
+                    <td>
+                        <span class="booking-status"
+                              th:classappend="${booking.bookingStatus.name().toLowerCase()}"
+                              th:text="${booking.bookingStatus}"></span>
+                    </td>
+                    <td>
+                        <span class="booking-status"
+                              th:classappend="${booking.paymentStatus.name() == 'PAID' ? 'confirmed' : 'pending'}"
+                              th:text="${booking.paymentStatus}"></span>
+                    </td>
+                    <td>
+                        <a th:href="@{/bookings/{id}(id=${booking.bookingId})}"
+                           class="btn btn-sm btn-outline-primary">Chi tiết</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

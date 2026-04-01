@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Thanh toán')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container mt-4">
+    <h2 class="mb-4"><i class="bi bi-credit-card"></i> Thanh toán đơn #<span th:text="${booking.bookingId}"></span></h2>
+
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <!-- Booking Summary -->
+    <div class="card mb-4">
+        <div class="card-header"><h5 class="mb-0">Thông tin đơn đặt vé</h5></div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <tr th:each="detail : ${booking.bookingDetails}">
+                        <td th:text="${detail.passenger.fullName}"></td>
+                        <td th:text="${detail.flight.flightCode}"></td>
+                        <td th:text="${detail.flight.departureAirport.airportCode + ' → ' + detail.flight.arrivalAirport.airportCode}"></td>
+                        <td th:text="${#temporals.format(detail.flight.departureTime, 'HH:mm dd/MM/yyyy')}"></td>
+                        <td class="text-end" th:text="${#numbers.formatDecimal(detail.ticketPrice, 0, 'COMMA', 0, 'POINT') + ' VND'}"></td>
+                    </tr>
+                </table>
+            </div>
+            <hr>
+            <div class="text-end">
+                <h4>Tổng cộng: <span class="price-tag" th:text="${#numbers.formatDecimal(booking.totalAmount, 0, 'COMMA', 0, 'POINT') + ' VND'}"></span></h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Method Selection -->
+    <div class="card mb-4">
+        <div class="card-header"><h5 class="mb-0">Chọn phương thức thanh toán</h5></div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="form-check payment-option p-3 border rounded" id="option-visa">
+                        <input class="form-check-input" type="radio" name="paymentMethodSelect" id="methodVisa" value="VISA_DEBIT" checked>
+                        <label class="form-check-label w-100" for="methodVisa">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-credit-card-2-front fs-3 me-3 text-primary"></i>
+                                <div>
+                                    <strong>Visa / Debit Card</strong>
+                                    <br><small class="text-muted">Thanh toán bằng thẻ Visa, Mastercard, JCB</small>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check payment-option p-3 border rounded" id="option-momo">
+                        <input class="form-check-input" type="radio" name="paymentMethodSelect" id="methodMomo" value="MOMO">
+                        <label class="form-check-label w-100" for="methodMomo">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-phone fs-3 me-3" style="color: #ae2070;"></i>
+                                <div>
+                                    <strong>MoMo</strong>
+                                    <br><small class="text-muted">Thanh toán qua ví điện tử MoMo</small>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visa/Debit Form -->
+    <div id="visaForm" class="card mb-4">
+        <div class="card-header"><h5 class="mb-0"><i class="bi bi-credit-card-2-front"></i> Thông tin thẻ</h5></div>
+        <div class="card-body">
+            <form th:action="@{/bookings/{id}/payment(id=${booking.bookingId})}" method="post" id="visaPaymentForm">
+                <input type="hidden" name="paymentMethod" value="VISA_DEBIT">
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <label class="form-label">Số thẻ</label>
+                        <input type="text" name="cardNumber" class="form-control" placeholder="1234 5678 9012 3456"
+                               maxlength="19" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Tên chủ thẻ</label>
+                        <input type="text" name="cardHolder" class="form-control" placeholder="NGUYEN VAN A" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Ngày hết hạn</label>
+                        <input type="text" name="cardExpiry" class="form-control" placeholder="MM/YY" maxlength="5" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">CVV</label>
+                        <input type="password" name="cardCvv" class="form-control" placeholder="***" maxlength="3" required>
+                    </div>
+                    <div class="col-12 text-center mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg px-5">
+                            <i class="bi bi-lock"></i> Thanh toán
+                            <span th:text="${#numbers.formatDecimal(booking.totalAmount, 0, 'COMMA', 0, 'POINT') + ' VND'}"></span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MoMo Form -->
+    <div id="momoForm" class="card mb-4" style="display: none;">
+        <div class="card-header"><h5 class="mb-0"><i class="bi bi-phone"></i> Thanh toán MoMo</h5></div>
+        <div class="card-body">
+            <form th:action="@{/bookings/{id}/payment(id=${booking.bookingId})}" method="post" id="momoPaymentForm">
+                <input type="hidden" name="paymentMethod" value="MOMO">
+                <div class="row g-3">
+                    <div class="col-md-6 mx-auto">
+                        <label class="form-label">Số điện thoại MoMo</label>
+                        <input type="tel" name="momoPhone" class="form-control" placeholder="09xxxxxxxx"
+                               pattern="0[0-9]{9}" required>
+                    </div>
+                    <div class="col-md-6 mx-auto text-center">
+                        <div class="p-4 bg-light rounded">
+                            <i class="bi bi-qr-code fs-1" style="color: #ae2070;"></i>
+                            <p class="mt-2 mb-0 text-muted">Quét mã QR bằng ứng dụng MoMo</p>
+                        </div>
+                    </div>
+                    <div class="col-12 text-center mt-4">
+                        <button type="submit" class="btn btn-lg px-5" style="background-color: #ae2070; color: white;">
+                            <i class="bi bi-phone"></i> Thanh toán MoMo
+                            <span th:text="${#numbers.formatDecimal(booking.totalAmount, 0, 'COMMA', 0, 'POINT') + ' VND'}"></span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="text-center mb-4">
+        <a th:href="@{/bookings/{id}(id=${booking.bookingId})}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Quay lại
+        </a>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+
+<script>
+    document.querySelectorAll('input[name="paymentMethodSelect"]').forEach(radio => {
+        radio.addEventListener('change', function () {
+            const visaForm = document.getElementById('visaForm');
+            const momoForm = document.getElementById('momoForm');
+            const optionVisa = document.getElementById('option-visa');
+            const optionMomo = document.getElementById('option-momo');
+
+            if (this.value === 'VISA_DEBIT') {
+                visaForm.style.display = 'block';
+                momoForm.style.display = 'none';
+                optionVisa.classList.add('border-primary');
+                optionMomo.classList.remove('border-primary');
+                // Disable momo fields, enable visa fields
+                visaForm.querySelectorAll('input[required]').forEach(i => i.required = true);
+                momoForm.querySelectorAll('input').forEach(i => i.required = false);
+            } else {
+                visaForm.style.display = 'none';
+                momoForm.style.display = 'block';
+                optionVisa.classList.remove('border-primary');
+                optionMomo.classList.add('border-primary');
+                // Disable visa fields, enable momo fields
+                visaForm.querySelectorAll('input:not([type=hidden])').forEach(i => i.required = false);
+                momoForm.querySelectorAll('input[name="momoPhone"]').forEach(i => i.required = true);
+            }
+        });
+    });
+
+    // Format card number with spaces
+    document.querySelector('input[name="cardNumber"]')?.addEventListener('input', function (e) {
+        let value = this.value.replace(/\s/g, '').replace(/\D/g, '');
+        this.value = value.replace(/(.{4})/g, '$1 ').trim();
+    });
+
+    // Format expiry date
+    document.querySelector('input[name="cardExpiry"]')?.addEventListener('input', function (e) {
+        let value = this.value.replace(/\D/g, '');
+        if (value.length >= 2) {
+            value = value.substring(0, 2) + '/' + value.substring(2, 4);
+        }
+        this.value = value;
+    });
+</script>
+</body>
+</html>

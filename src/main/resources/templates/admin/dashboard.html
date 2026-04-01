@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Admin - Dashboard')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container mt-4">
+    <h2 class="mb-4"><i class="bi bi-speedometer2"></i> Bảng điều khiển</h2>
+
+    <!-- Stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card revenue">
+                <h6>Doanh thu tháng</h6>
+                <h3 th:text="${monthlyRevenue != null ? #numbers.formatDecimal(monthlyRevenue, 0, 'COMMA', 0, 'POINT') + ' VND' : '0 VND'}"></h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card bookings">
+                <h6>Tổng đặt vé</h6>
+                <h3 th:text="${totalBookings}">0</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card users">
+                <h6>Khách hàng</h6>
+                <h3 th:text="${totalUsers}">0</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card flights">
+                <h6>Chuyến bay</h6>
+                <h3 th:text="${totalFlights}">0</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="row g-3">
+        <div class="col-md-4">
+            <a th:href="@{/admin/flights}" class="card text-decoration-none">
+                <div class="card-body text-center">
+                    <i class="bi bi-airplane fs-1 text-primary"></i>
+                    <h5 class="mt-2">Quản lý chuyến bay</h5>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a th:href="@{/admin/bookings}" class="card text-decoration-none">
+                <div class="card-body text-center">
+                    <i class="bi bi-journal-text fs-1 text-primary"></i>
+                    <h5 class="mt-2">Quản lý đặt chỗ</h5>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a th:href="@{/admin/airports}" class="card text-decoration-none">
+                <div class="card-body text-center">
+                    <i class="bi bi-building fs-1 text-primary"></i>
+                    <h5 class="mt-2">Quản lý sân bay</h5>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a th:href="@{/admin/airplanes}" class="card text-decoration-none">
+                <div class="card-body text-center">
+                    <i class="bi bi-airplane-engines fs-1 text-primary"></i>
+                    <h5 class="mt-2">Quản lý máy bay</h5>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a th:href="@{/admin/users}" class="card text-decoration-none">
+                <div class="card-body text-center">
+                    <i class="bi bi-people fs-1 text-primary"></i>
+                    <h5 class="mt-2">Quản lý khách hàng</h5>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a th:href="@{/admin/seat-classes}" class="card text-decoration-none">
+                <div class="card-body text-center">
+                    <i class="bi bi-star fs-1 text-primary"></i>
+                    <h5 class="mt-2">Quản lý hạng vé</h5>
+                </div>
+            </a>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

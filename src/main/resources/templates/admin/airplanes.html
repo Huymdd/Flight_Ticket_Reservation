@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Quản lý máy bay')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-airplane-engines"></i> Quản lý máy bay</h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#airplaneModal">
+            <i class="bi bi-plus-circle"></i> Thêm máy bay
+        </button>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-primary">
+                <tr>
+                    <th>ID</th>
+                    <th>Tên máy bay</th>
+                    <th>Model</th>
+                    <th>Tổng ghế</th>
+                    <th>Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="airplane : ${airplanes}">
+                    <td th:text="${airplane.airplaneId}"></td>
+                    <td th:text="${airplane.airplaneName}"></td>
+                    <td th:text="${airplane.airplaneModel}"></td>
+                    <td th:text="${airplane.totalSeats}"></td>
+                    <td><span class="badge bg-success" th:text="${airplane.status}"></span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="airplaneModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/admin/airplanes/save}" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Thêm máy bay</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Tên máy bay</label>
+                            <input type="text" name="airplaneName" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Model</label>
+                            <input type="text" name="airplaneModel" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tổng số ghế</label>
+                            <input type="number" name="totalSeats" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

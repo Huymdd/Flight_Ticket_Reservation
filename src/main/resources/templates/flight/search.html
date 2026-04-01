@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Tìm chuyến bay')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container mt-4">
+
+    <!-- No results yet: show message to search from homepage -->
+    <div th:if="${flights == null}" class="text-center py-5">
+        <i class="bi bi-search fs-1 text-muted"></i>
+        <h4 class="mt-3">Tìm chuyến bay</h4>
+        <p class="text-muted">Vui lòng tìm kiếm chuyến bay từ trang chủ</p>
+        <a th:href="@{/}" class="btn btn-primary"><i class="bi bi-house"></i> Về trang chủ</a>
+    </div>
+
+    <!-- ========== OUTBOUND RESULTS ========== -->
+    <div th:if="${flights != null}">
+        <!-- Route Info Bar -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-0" th:if="${depAirport != null && arrAirport != null}">
+                <i class="bi bi-airplane"></i>
+                Chiều đi: <span th:text="${depAirport.city}"></span> - <span th:text="${arrAirport.city}"></span>
+                <small class="text-muted ms-2" th:text="'(' + ${passengers} + ' hành khách)'"></small>
+            </h4>
+            <a th:href="@{/}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Tìm kiếm mới
+            </a>
+        </div>
+
+        <!-- Outbound Date Bar -->
+        <div th:if="${outboundDateBar != null}" class="card mb-3">
+            <div class="card-body p-0">
+                <div class="d-flex align-items-stretch">
+                    <a th:href="@{/flights/search(
+                        departureAirportId=${departureAirportId},
+                        arrivalAirportId=${arrivalAirportId},
+                        departureDate=${T(java.time.LocalDate).parse(outboundDateBar[0]['date']).minusDays(4)},
+                        returnDate=${returnDate},
+                        tripType=${tripType},
+                        passengers=${passengers})}"
+                       class="date-nav-btn d-flex align-items-center px-3 text-decoration-none">
+                        <i class="bi bi-chevron-left"></i> <span class="d-none d-md-inline ms-1">7 ngày trước</span>
+                    </a>
+                    <div class="d-flex flex-grow-1">
+                        <a th:each="dp : ${outboundDateBar}"
+                           th:href="@{/flights/search(
+                               departureAirportId=${departureAirportId},
+                               arrivalAirportId=${arrivalAirportId},
+                               departureDate=${dp['date']},
+                               returnDate=${returnDate},
+                               tripType=${tripType},
+                               passengers=${passengers})}"
+                           class="date-bar-item flex-fill text-center text-decoration-none py-2 px-1"
+                           th:classappend="${dp['selected'] ? ' date-bar-active' : ''}">
+                            <div class="small" th:text="${dp['dayOfWeek']}"></div>
+                            <div class="small fw-bold"
+                                 th:classappend="${dp['hasFlights'] ? ' text-success' : ' text-muted'}"
+                                 th:text="${dp['priceStr']}"></div>
+                        </a>
+                    </div>
+                    <a th:href="@{/flights/search(
+                        departureAirportId=${departureAirportId},
+                        arrivalAirportId=${arrivalAirportId},
+                        departureDate=${T(java.time.LocalDate).parse(outboundDateBar[6]['date']).plusDays(4)},
+                        returnDate=${returnDate},
+                        tripType=${tripType},
+                        passengers=${passengers})}"
+                       class="date-nav-btn d-flex align-items-center px-3 text-decoration-none">
+                        <span class="d-none d-md-inline me-1">7 ngày tiếp</span> <i class="bi bi-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Outbound Flight Results -->
+        <div th:if="${#lists.isEmpty(flights)}" class="alert alert-info">
+            Không tìm thấy chuyến bay phù hợp. Vui lòng thử ngày khác.
+        </div>
+
+        <div th:each="flight : ${flights}" class="flight-card"
+             th:classappend="${selectedOutboundFlight != null && flight.flightId == selectedOutboundFlight.flightId ? ' border-success border-2' : ''}">
+            <div class="row align-items-center">
+                <div class="col-md-2">
+                    <strong th:text="${flight.flightCode}">VN123</strong>
+                    <br>
+                    <small class="text-muted" th:text="${flight.airplane.airplaneName}">Boeing 787</small>
+                </div>
+                <div class="col-md-3">
+                    <div class="fw-bold" th:text="${#temporals.format(flight.departureTime, 'HH:mm')}">08:00</div>
+                    <div th:text="${flight.departureAirport.airportCode}">SGN</div>
+                    <small class="text-muted" th:text="${flight.departureAirport.city}">TP.HCM</small>
+                </div>
+                <div class="col-md-1 text-center">
+                    <i class="bi bi-arrow-right fs-4"></i>
+                </div>
+                <div class="col-md-3">
+                    <div class="fw-bold" th:text="${#temporals.format(flight.arrivalTime, 'HH:mm')}">10:00</div>
+                    <div th:text="${flight.arrivalAirport.airportCode}">HAN</div>
+                    <small class="text-muted" th:text="${flight.arrivalAirport.city}">Ha Noi</small>
+                </div>
+                <div class="col-md-2 text-center">
+                    <div class="price-tag" th:text="${#numbers.formatDecimal(flight.basePrice, 0, 'COMMA', 0, 'POINT') + ' VND'}">1,500,000 VND</div>
+                    <small class="text-muted">Còn <span th:text="${flight.availableSeats}">50</span> chỗ</small>
+                </div>
+                <div class="col-md-1">
+                    <!-- One-way: go directly to booking -->
+                    <a th:if="${tripType != 'ROUND_TRIP'}"
+                       th:href="@{/bookings/new(flightId=${flight.flightId}, passengers=${passengers})}"
+                       class="btn btn-primary btn-sm">Đặt vé</a>
+                    <!-- Round-trip: select outbound flight -->
+                    <a th:if="${tripType == 'ROUND_TRIP' && (selectedOutboundFlight == null || flight.flightId != selectedOutboundFlight.flightId)}"
+                       th:href="@{/flights/search(
+                           departureAirportId=${departureAirportId},
+                           arrivalAirportId=${arrivalAirportId},
+                           departureDate=${departureDate},
+                           returnDate=${returnDate},
+                           tripType='ROUND_TRIP',
+                           passengers=${passengers},
+                           selectedOutboundFlightId=${flight.flightId})}"
+                       class="btn btn-outline-primary btn-sm">Chọn</a>
+                    <span th:if="${selectedOutboundFlight != null && flight.flightId == selectedOutboundFlight.flightId}"
+                          class="badge bg-success"><i class="bi bi-check"></i> Đã chọn</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== SELECTED OUTBOUND SUMMARY ========== -->
+    <div th:if="${selectedOutboundFlight != null}" class="alert alert-success mt-3">
+        <strong><i class="bi bi-check-circle"></i> Chuyến đi đã chọn:</strong>
+        <span th:text="${selectedOutboundFlight.flightCode}"></span> —
+        <span th:text="${selectedOutboundFlight.departureAirport.airportCode + ' → ' + selectedOutboundFlight.arrivalAirport.airportCode}"></span> —
+        <span th:text="${#temporals.format(selectedOutboundFlight.departureTime, 'HH:mm dd/MM/yyyy')}"></span> —
+        <span class="fw-bold" th:text="${#numbers.formatDecimal(selectedOutboundFlight.basePrice, 0, 'COMMA', 0, 'POINT') + ' VND'}"></span>
+    </div>
+
+    <!-- ========== RETURN RESULTS ========== -->
+    <div th:if="${returnFlights != null}">
+        <h4 class="mb-3 mt-4">
+            <i class="bi bi-airplane" style="transform: scaleX(-1); display: inline-block;"></i>
+            Chiều về: <span th:text="${arrAirport.city}"></span> - <span th:text="${depAirport.city}"></span>
+        </h4>
+
+        <!-- Return Date Bar -->
+        <div th:if="${returnDateBar != null}" class="card mb-3">
+            <div class="card-body p-0">
+                <div class="d-flex align-items-stretch">
+                    <a th:href="@{/flights/search(
+                        departureAirportId=${departureAirportId},
+                        arrivalAirportId=${arrivalAirportId},
+                        departureDate=${departureDate},
+                        returnDate=${T(java.time.LocalDate).parse(returnDateBar[0]['date']).minusDays(4)},
+                        tripType='ROUND_TRIP',
+                        passengers=${passengers},
+                        selectedOutboundFlightId=${selectedOutboundFlight.flightId})}"
+                       class="date-nav-btn d-flex align-items-center px-3 text-decoration-none">
+                        <i class="bi bi-chevron-left"></i> <span class="d-none d-md-inline ms-1">7 ngày trước</span>
+                    </a>
+                    <div class="d-flex flex-grow-1">
+                        <a th:each="dp : ${returnDateBar}"
+                           th:href="@{/flights/search(
+                               departureAirportId=${departureAirportId},
+                               arrivalAirportId=${arrivalAirportId},
+                               departureDate=${departureDate},
+                               returnDate=${dp['date']},
+                               tripType='ROUND_TRIP',
+                               passengers=${passengers},
+                               selectedOutboundFlightId=${selectedOutboundFlight.flightId})}"
+                           class="date-bar-item flex-fill text-center text-decoration-none py-2 px-1"
+                           th:classappend="${dp['selected'] ? ' date-bar-active' : ''}">
+                            <div class="small" th:text="${dp['dayOfWeek']}"></div>
+                            <div class="small fw-bold"
+                                 th:classappend="${dp['hasFlights'] ? ' text-success' : ' text-muted'}"
+                                 th:text="${dp['priceStr']}"></div>
+                        </a>
+                    </div>
+                    <a th:href="@{/flights/search(
+                        departureAirportId=${departureAirportId},
+                        arrivalAirportId=${arrivalAirportId},
+                        departureDate=${departureDate},
+                        returnDate=${T(java.time.LocalDate).parse(returnDateBar[6]['date']).plusDays(4)},
+                        tripType='ROUND_TRIP',
+                        passengers=${passengers},
+                        selectedOutboundFlightId=${selectedOutboundFlight.flightId})}"
+                       class="date-nav-btn d-flex align-items-center px-3 text-decoration-none">
+                        <span class="d-none d-md-inline me-1">7 ngày tiếp</span> <i class="bi bi-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Return Flight Results -->
+        <div th:if="${#lists.isEmpty(returnFlights)}" class="alert alert-info">
+            Không tìm thấy chuyến bay về phù hợp. Vui lòng thử ngày khác.
+        </div>
+
+        <div th:each="flight : ${returnFlights}" class="flight-card">
+            <div class="row align-items-center">
+                <div class="col-md-2">
+                    <strong th:text="${flight.flightCode}">VN123</strong>
+                    <br>
+                    <small class="text-muted" th:text="${flight.airplane.airplaneName}">Boeing 787</small>
+                </div>
+                <div class="col-md-3">
+                    <div class="fw-bold" th:text="${#temporals.format(flight.departureTime, 'HH:mm')}">08:00</div>
+                    <div th:text="${flight.departureAirport.airportCode}">HAN</div>
+                    <small class="text-muted" th:text="${flight.departureAirport.city}">Ha Noi</small>
+                </div>
+                <div class="col-md-1 text-center">
+                    <i class="bi bi-arrow-right fs-4"></i>
+                </div>
+                <div class="col-md-3">
+                    <div class="fw-bold" th:text="${#temporals.format(flight.arrivalTime, 'HH:mm')}">10:00</div>
+                    <div th:text="${flight.arrivalAirport.airportCode}">SGN</div>
+                    <small class="text-muted" th:text="${flight.arrivalAirport.city}">TP.HCM</small>
+                </div>
+                <div class="col-md-2 text-center">
+                    <div class="price-tag" th:text="${#numbers.formatDecimal(flight.basePrice, 0, 'COMMA', 0, 'POINT') + ' VND'}">1,500,000 VND</div>
+                    <small class="text-muted">Còn <span th:text="${flight.availableSeats}">50</span> chỗ</small>
+                </div>
+                <div class="col-md-1">
+                    <a th:href="@{/bookings/new(flightId=${selectedOutboundFlight.flightId}, returnFlightId=${flight.flightId}, passengers=${passengers})}"
+                       class="btn btn-success btn-sm">Đặt vé</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+
+<style>
+    .date-nav-btn {
+        background: #f8f9fa;
+        color: #333;
+        border: none;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        transition: background 0.2s;
+    }
+    .date-nav-btn:hover { background: #e9ecef; color: #333; }
+    .date-bar-item {
+        color: #333;
+        border-left: 1px solid #eee;
+        transition: background 0.2s;
+        min-width: 0;
+    }
+    .date-bar-item:hover { background: #f0f0f0; }
+    .date-bar-active {
+        background: #2c1a4d !important;
+        color: white !important;
+    }
+    .date-bar-active .text-success,
+    .date-bar-active .text-muted {
+        color: white !important;
+    }
+    .date-bar-active .small { color: white !important; }
+</style>
+</body>
+</html>

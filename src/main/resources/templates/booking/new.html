@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Đặt vé')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container mt-4">
+    <h2 class="mb-4"><i class="bi bi-ticket-perforated"></i> Đặt vé</h2>
+
+    <!-- Outbound Flight Summary -->
+    <div class="card mb-3">
+        <div class="card-header"><h5 class="mb-0"><i class="bi bi-airplane"></i> Chuyến đi - <span th:text="${flight.flightCode}"></span></h5></div>
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <strong th:text="${flight.departureAirport.airportCode + ' → ' + flight.arrivalAirport.airportCode}"></strong>
+                    <br>
+                    <span th:text="${#temporals.format(flight.departureTime, 'HH:mm dd/MM/yyyy')}"></span>
+                </div>
+                <div class="col-md-4 text-center">
+                    <span th:text="${flight.airplane.airplaneName}"></span>
+                </div>
+                <div class="col-md-4 text-end">
+                    <span class="price-tag" th:text="${#numbers.formatDecimal(flight.basePrice, 0, 'COMMA', 0, 'POINT') + ' VND'}"></span>
+                    <small class="d-block text-muted">/ người</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Return Flight Summary (if round-trip) -->
+    <div class="card mb-3" th:if="${returnFlight != null}">
+        <div class="card-header"><h5 class="mb-0"><i class="bi bi-airplane" style="transform: scaleX(-1); display: inline-block;"></i> Chuyến về - <span th:text="${returnFlight.flightCode}"></span></h5></div>
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <strong th:text="${returnFlight.departureAirport.airportCode + ' → ' + returnFlight.arrivalAirport.airportCode}"></strong>
+                    <br>
+                    <span th:text="${#temporals.format(returnFlight.departureTime, 'HH:mm dd/MM/yyyy')}"></span>
+                </div>
+                <div class="col-md-4 text-center">
+                    <span th:text="${returnFlight.airplane.airplaneName}"></span>
+                </div>
+                <div class="col-md-4 text-end">
+                    <span class="price-tag" th:text="${#numbers.formatDecimal(returnFlight.basePrice, 0, 'COMMA', 0, 'POINT') + ' VND'}"></span>
+                    <small class="d-block text-muted">/ người</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Price Summary (for round-trip) -->
+    <div class="alert alert-info text-end" th:if="${returnFlight != null}">
+        <strong>Tổng giá vé / người:</strong>
+        <span class="price-tag"
+              th:text="${#numbers.formatDecimal(flight.basePrice.add(returnFlight.basePrice), 0, 'COMMA', 0, 'POINT') + ' VND'}"></span>
+    </div>
+
+    <!-- Booking Form -->
+    <form th:action="@{/bookings/create}" method="post">
+        <input type="hidden" name="flightId" th:value="${flight.flightId}">
+        <input type="hidden" name="returnFlightId" th:value="${returnFlight?.flightId}" th:if="${returnFlight != null}">
+
+        <!-- Passenger Info -->
+        <div th:each="i : ${#numbers.sequence(0, passengers - 1)}" class="card mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">Hành khách <span th:text="${i + 1}">1</span></h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Họ và tên</label>
+                        <input type="text" name="passengerNames" class="form-control" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Giới tính</label>
+                        <select name="passengerGenders" class="form-select" required>
+                            <option value="MALE">Nam</option>
+                            <option value="FEMALE">Nữ</option>
+                            <option value="OTHER">Khác</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Ngày sinh</label>
+                        <input type="date" name="passengerDobs" class="form-control" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Quốc tịch</label>
+                        <input type="text" name="passengerNationalities" class="form-control" value="Việt Nam" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Loại giấy tờ</label>
+                        <select name="passengerDocTypes" class="form-select" required>
+                            <option value="CCCD">CCCD</option>
+                            <option value="PASSPORT">Hộ chiếu</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Số giấy tờ</label>
+                        <input type="text" name="passengerDocNumbers" class="form-control" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Services -->
+        <div class="card mb-3" th:if="${services != null && !#lists.isEmpty(services)}">
+            <div class="card-header">
+                <h5 class="mb-0">Dịch vụ bổ sung</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div th:each="service : ${services}" class="col-md-4">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input"
+                                   th:id="${'service-' + service.serviceId}">
+                            <label class="form-check-label" th:for="${'service-' + service.serviceId}">
+                                <span th:text="${service.serviceName}"></span> -
+                                <strong th:text="${#numbers.formatDecimal(service.price, 0, 'COMMA', 0, 'POINT') + ' VND'}"></strong>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary btn-lg px-5">
+                <i class="bi bi-credit-card"></i> Tiến hành đặt vé
+            </button>
+        </div>
+    </form>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

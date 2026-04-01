@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('ARS - Đặt Vé Máy Bay')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main>
+    <!-- Hero Section -->
+    <section class="hero-section text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3">Khám phá thế giới cùng ARS</h1>
+            <p class="lead mb-4">Đặt vé máy bay nhanh chóng, tiện lợi với giá tốt nhất</p>
+        </div>
+    </section>
+
+    <!-- Search Form -->
+    <div class="container" style="margin-top: -50px;">
+        <div class="search-card-dark">
+            <form th:action="@{/flights/search}" method="get">
+                <!-- Top options row -->
+                <div class="search-options-row mb-3">
+                    <div class="dropdown">
+                        <button class="btn search-option-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" id="tripTypeBtn">
+                            Khứ hồi
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-dark">
+                            <li><a class="dropdown-item" href="#" onclick="setTripType('ONE_WAY', 'Một chiều')">Một chiều</a></li>
+                            <li><a class="dropdown-item active" href="#" onclick="setTripType('ROUND_TRIP', 'Khứ hồi')">Khứ hồi</a></li>
+                        </ul>
+                        <input type="hidden" name="tripType" id="tripTypeInput" value="ROUND_TRIP">
+                    </div>
+
+                    <div class="dropdown">
+                        <button class="btn search-option-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" id="passengerClassBtn">
+                            1 Hành khách, Hạng phổ thông
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-dark passenger-dropdown p-3">
+                            <div class="mb-3">
+                                <label class="form-label text-warning small fw-bold">Hạng Bay</label>
+                                <select name="seatClassId" class="form-select form-select-dark" id="seatClassSelect">
+                                    <option th:each="sc : ${seatClasses}"
+                                            th:value="${sc.classId}"
+                                            th:text="${sc.className}"
+                                            th:attr="data-name=${sc.className}"></option>
+                                </select>
+                            </div>
+                            <div class="passenger-row mb-2">
+                                <span>Người lớn (12+)</span>
+                                <div class="counter-group">
+                                    <button type="button" class="btn btn-outline-light btn-sm" onclick="changeCount('adults', -1)">−</button>
+                                    <span id="adultsCount" class="mx-2">1</span>
+                                    <button type="button" class="btn btn-outline-light btn-sm" onclick="changeCount('adults', 1)">+</button>
+                                </div>
+                            </div>
+                            <div class="passenger-row mb-2">
+                                <span>Trẻ em (2-11)</span>
+                                <div class="counter-group">
+                                    <button type="button" class="btn btn-outline-light btn-sm" onclick="changeCount('children', -1)">−</button>
+                                    <span id="childrenCount" class="mx-2">0</span>
+                                    <button type="button" class="btn btn-outline-light btn-sm" onclick="changeCount('children', 1)">+</button>
+                                </div>
+                            </div>
+                            <div class="passenger-row">
+                                <span>Trẻ sơ sinh (0-1)</span>
+                                <div class="counter-group">
+                                    <button type="button" class="btn btn-outline-light btn-sm" onclick="changeCount('infants', -1)">−</button>
+                                    <span id="infantsCount" class="mx-2">0</span>
+                                    <button type="button" class="btn btn-outline-light btn-sm" onclick="changeCount('infants', 1)">+</button>
+                                </div>
+                            </div>
+                            <input type="hidden" name="passengers" id="passengersInput" value="1">
+                            <input type="hidden" name="adults" id="adultsInput" value="1">
+                            <input type="hidden" name="children" id="childrenInput" value="0">
+                            <input type="hidden" name="infants" id="infantsInput" value="0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search fields row -->
+                <div class="row g-0 search-fields-row">
+                    <div class="col search-field-cell">
+                        <label class="form-label text-warning small fw-bold mb-1">Từ</label>
+                        <select name="departureAirportId" class="form-select form-select-dark" required>
+                            <option value="">Chọn điểm đi</option>
+                            <option th:each="airport : ${airports}"
+                                    th:value="${airport.airportId}"
+                                    th:text="${airport.airportCode + ' - ' + airport.city}"></option>
+                        </select>
+                    </div>
+                    <div class="col search-field-cell">
+                        <label class="form-label text-warning small fw-bold mb-1">Đến</label>
+                        <select name="arrivalAirportId" class="form-select form-select-dark" required>
+                            <option value="">Chọn điểm đến</option>
+                            <option th:each="airport : ${airports}"
+                                    th:value="${airport.airportId}"
+                                    th:text="${airport.airportCode + ' - ' + airport.city}"></option>
+                        </select>
+                    </div>
+                    <div class="col search-field-cell">
+                        <label class="form-label text-warning small fw-bold mb-1">Ngày đi</label>
+                        <input type="date" name="departureDate" class="form-control form-control-dark" required>
+                    </div>
+                    <div class="col search-field-cell" id="returnDateCell">
+                        <label class="form-label text-warning small fw-bold mb-1">Ngày về</label>
+                        <input type="date" name="returnDate" class="form-control form-control-dark" id="returnDateInput">
+                    </div>
+                    <div class="col-auto d-flex align-items-end">
+                        <button type="submit" class="btn btn-search-submit">
+                            Tìm kiếm
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const counts = { adults: 1, children: 0, infants: 0 };
+
+        function changeCount(type, delta) {
+            const min = type === 'adults' ? 1 : 0;
+            counts[type] = Math.max(min, Math.min(9, counts[type] + delta));
+            document.getElementById(type + 'Count').textContent = counts[type];
+            document.getElementById(type + 'Input').value = counts[type];
+
+            const total = counts.adults + counts.children + counts.infants;
+            document.getElementById('passengersInput').value = total;
+
+            const className = document.getElementById('seatClassSelect').selectedOptions[0]?.dataset.name || 'Hạng phổ thông';
+            document.getElementById('passengerClassBtn').textContent = total + ' Hành khách, ' + className;
+        }
+
+        function setTripType(value, label) {
+            document.getElementById('tripTypeInput').value = value;
+            document.getElementById('tripTypeBtn').textContent = label;
+            const returnCell = document.getElementById('returnDateCell');
+            const returnInput = document.getElementById('returnDateInput');
+            if (value === 'ONE_WAY') {
+                returnCell.style.display = 'none';
+                returnInput.removeAttribute('required');
+            } else {
+                returnCell.style.display = '';
+            }
+        }
+
+        document.getElementById('seatClassSelect')?.addEventListener('change', function() {
+            const total = counts.adults + counts.children + counts.infants;
+            const className = this.selectedOptions[0]?.dataset.name || '';
+            document.getElementById('passengerClassBtn').textContent = total + ' Hành khách, ' + className;
+        });
+
+        // Stop dropdown from closing when clicking inside passenger dropdown
+        document.querySelector('.passenger-dropdown')?.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    </script>
+
+    <!-- Features -->
+    <div class="container mt-5">
+        <div class="row g-4 text-center">
+            <div class="col-md-4">
+                <div class="p-4">
+                    <i class="bi bi-shield-check fs-1 text-primary"></i>
+                    <h5 class="mt-3">An toàn & Bảo mật</h5>
+                    <p class="text-muted">Thông tin cá nhân được bảo vệ tuyệt đối</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-4">
+                    <i class="bi bi-clock fs-1 text-primary"></i>
+                    <h5 class="mt-3">Đặt vé nhanh chóng</h5>
+                    <p class="text-muted">Chỉ vài phút để hoàn tất đặt vé</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-4">
+                    <i class="bi bi-wallet2 fs-1 text-primary"></i>
+                    <h5 class="mt-3">Thanh toán đa dạng</h5>
+                    <p class="text-muted">Hỗ trợ thẻ, QR, ví điện tử</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

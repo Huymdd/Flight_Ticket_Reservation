@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Quản lý chuyến bay')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-airplane"></i> Quản lý chuyến bay</h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#flightModal">
+            <i class="bi bi-plus-circle"></i> Thêm chuyến bay
+        </button>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-primary">
+                <tr>
+                    <th>Mã chuyến</th>
+                    <th>Máy bay</th>
+                    <th>Điểm đi</th>
+                    <th>Điểm đến</th>
+                    <th>Giờ cất cánh</th>
+                    <th>Giờ hạ cánh</th>
+                    <th>Giá</th>
+                    <th>Chỗ trống</th>
+                    <th>Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="flight : ${flights}">
+                    <td th:text="${flight.flightCode}"></td>
+                    <td th:text="${flight.airplane.airplaneName}"></td>
+                    <td th:text="${flight.departureAirport.airportCode}"></td>
+                    <td th:text="${flight.arrivalAirport.airportCode}"></td>
+                    <td th:text="${#temporals.format(flight.departureTime, 'HH:mm dd/MM')}"></td>
+                    <td th:text="${#temporals.format(flight.arrivalTime, 'HH:mm dd/MM')}"></td>
+                    <td th:text="${#numbers.formatDecimal(flight.basePrice, 0, 'COMMA', 0, 'POINT')}"></td>
+                    <td th:text="${flight.availableSeats}"></td>
+                    <td><span class="badge bg-success" th:text="${flight.status}"></span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Add Flight Modal -->
+    <div class="modal fade" id="flightModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form th:action="@{/admin/flights/save}" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Thêm chuyến bay</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Mã chuyến bay</label>
+                                <input type="text" name="flightCode" class="form-control" required placeholder="VD: VN123">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Máy bay</label>
+                                <select name="airplaneId" class="form-select" required>
+                                    <option th:each="airplane : ${airplanes}"
+                                            th:value="${airplane.airplaneId}"
+                                            th:text="${airplane.airplaneName}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Số chỗ</label>
+                                <input type="number" name="availableSeats" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Sân bay đi</label>
+                                <select name="departureAirportId" class="form-select" required>
+                                    <option th:each="airport : ${airports}"
+                                            th:value="${airport.airportId}"
+                                            th:text="${airport.airportCode + ' - ' + airport.airportName}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Sân bay đến</label>
+                                <select name="arrivalAirportId" class="form-select" required>
+                                    <option th:each="airport : ${airports}"
+                                            th:value="${airport.airportId}"
+                                            th:text="${airport.airportCode + ' - ' + airport.airportName}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Giờ cất cánh</label>
+                                <input type="datetime-local" name="departureTime" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Giờ hạ cánh</label>
+                                <input type="datetime-local" name="arrivalTime" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Giá cơ bản (VND)</label>
+                                <input type="number" name="basePrice" class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

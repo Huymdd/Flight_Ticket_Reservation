@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Chi tiết đặt vé')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container mt-4">
+    <h2 class="mb-4"><i class="bi bi-ticket-perforated"></i> Chi tiết đặt vé #<span th:text="${booking.bookingId}"></span></h2>
+
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <!-- Booking Info -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <small class="text-muted">Ngày đặt</small>
+                    <p th:text="${#temporals.format(booking.bookingDate, 'dd/MM/yyyy HH:mm')}"></p>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted">Trạng thái</small>
+                    <p>
+                        <span class="booking-status"
+                              th:classappend="${booking.bookingStatus.name().toLowerCase()}"
+                              th:text="${booking.bookingStatus}"></span>
+                    </p>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted">Thanh toán</small>
+                    <p>
+                        <span class="booking-status"
+                              th:classappend="${booking.paymentStatus.name() == 'PAID' ? 'confirmed' : 'pending'}"
+                              th:text="${booking.paymentStatus}"></span>
+                    </p>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted">Tổng tiền</small>
+                    <p class="price-tag" th:text="${#numbers.formatDecimal(booking.totalAmount, 0, 'COMMA', 0, 'POINT') + ' VND'}"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Passengers & Flight Details -->
+    <div class="card mb-4">
+        <div class="card-header"><h5 class="mb-0">Thông tin vé</h5></div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Hành khách</th>
+                            <th>Chuyến bay</th>
+                            <th>Hành trình</th>
+                            <th>Giờ bay</th>
+                            <th>Giá vé</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="detail : ${booking.bookingDetails}">
+                            <td th:text="${detail.passenger.fullName}"></td>
+                            <td th:text="${detail.flight.flightCode}"></td>
+                            <td th:text="${detail.flight.departureAirport.airportCode + ' → ' + detail.flight.arrivalAirport.airportCode}"></td>
+                            <td th:text="${#temporals.format(detail.flight.departureTime, 'HH:mm dd/MM/yyyy')}"></td>
+                            <td th:text="${#numbers.formatDecimal(detail.ticketPrice, 0, 'COMMA', 0, 'POINT') + ' VND'}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Info (if paid) -->
+    <div class="card mb-4" th:if="${booking.payment != null && booking.payment.paymentStatus.name() == 'SUCCESS'}">
+        <div class="card-header"><h5 class="mb-0"><i class="bi bi-check-circle text-success"></i> Thông tin thanh toán</h5></div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <small class="text-muted">Phương thức</small>
+                    <p th:text="${booking.payment.paymentMethod.name() == 'VISA_DEBIT' ? 'Visa / Debit Card' : 'MoMo'}"></p>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted">Ngày thanh toán</small>
+                    <p th:text="${#temporals.format(booking.payment.paymentDate, 'dd/MM/yyyy HH:mm')}"></p>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted">Mã giao dịch</small>
+                    <p th:text="${booking.payment.transactionCode}"></p>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted">Số tiền</small>
+                    <p class="price-tag" th:text="${#numbers.formatDecimal(booking.payment.amount, 0, 'COMMA', 0, 'POINT') + ' VND'}"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="text-center" th:if="${booking.bookingStatus.name() != 'CANCELLED'}">
+        <a th:if="${booking.paymentStatus.name() == 'UNPAID'}"
+           th:href="@{/bookings/{id}/payment(id=${booking.bookingId})}"
+           class="btn btn-success btn-lg me-2">
+            <i class="bi bi-credit-card"></i> Thanh toán ngay
+        </a>
+        <form th:if="${booking.bookingStatus.name() == 'PENDING'}"
+              th:action="@{/bookings/{id}/cancel(id=${booking.bookingId})}" method="post" class="d-inline">
+            <button type="submit" class="btn btn-danger"
+                    onclick="return confirm('Bạn có chắc muốn hủy vé?')">
+                <i class="bi bi-x-circle"></i> Hủy vé
+            </button>
+        </form>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>
