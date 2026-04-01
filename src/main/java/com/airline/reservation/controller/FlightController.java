@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 
+// Handles flight search, filtering, and detail view operations
 @Controller
 @RequestMapping("/flights")
 public class FlightController {
