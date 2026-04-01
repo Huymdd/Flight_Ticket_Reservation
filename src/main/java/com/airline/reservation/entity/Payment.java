@@ -5,6 +5,7 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+// Payment entity - tracks transaction details for each booking
 @Entity
 @Table(name = "payments")
 @Getter @Setter
