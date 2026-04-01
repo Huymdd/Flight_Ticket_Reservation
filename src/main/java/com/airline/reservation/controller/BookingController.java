@@ -14,7 +14,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-
+// Handles all booking operations: creation, payment, history, and cancellation
 @Controller
 @RequestMapping("/bookings")
 public class BookingController {
