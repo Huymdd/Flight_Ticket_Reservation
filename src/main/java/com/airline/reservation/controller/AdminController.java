@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 
+// Admin dashboard - manages flights, airports, airplanes, users, bookings, and services
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
