@@ -88,3 +88,84 @@ git push -u origin feature/authentication-module
 git checkout main
 git merge feature/authentication-module
 ```
+
+## Push and Pull Request Workflow
+
+Once a feature is complete and verified functional on the local Spring Boot instance, the developer pushes the feature branch to GitHub:
+
+```bash
+git push origin feature/booking-workflow
+```
+
+A Pull Request is then opened on GitHub, targeting the `develop` branch. The PR description includes:
+
+- A summary of the Thymeleaf templates (HTML pages) added or modified
+- The database tables read from or written to by the new code
+- A brief verification checklist, e.g.:
+  - "Tested booking flight SGN → HAN, selected Business seat, payment successful — booking_details and payments written correctly"
+  - "Tested round-trip search SGN ↔ DAD — results displayed correctly for both departure and return"
+  - "Tested admin adding a new flight — data saved correctly to flights and seats tables"
+- Reference to any related issues or previously discussed changes
+
+### Example Pull Request Description
+
+```
+## Summary
+- Added payment.html for the payment workflow
+- Updated BookingController to handle payment processing and create records in payments table
+- Modified booking/detail.html to display payment info after completion
+
+## Database tables affected
+- `bookings` (READ/WRITE)
+- `payments` (WRITE)
+- `booking_details` (READ)
+
+## Verification checklist
+- [x] Booked flight SGN → HAN, Economy class — payment completed successfully
+- [x] Booked round-trip SGN ↔ DAD, Business class — total calculated correctly
+- [x] Tested payment failure scenario — error message displayed properly
+
+## Related issues
+- Closes #12
+```
+
+## Merge Conflict Resolution
+
+Merge conflicts in the Flight_Ticket_Reservation project most commonly arise when two developers modify shared Thymeleaf templates — for example, when both the authentication module and the admin dashboard branch reference or modify `login.html`, or when two branches independently update the `layout.html` fragment structure. The resolution process follows these steps:
+
+- Git identifies conflicting sections in the affected HTML template and marks them with standard conflict markers (`<<<<<<< HEAD`, `=======`, `>>>>>>> branch-name`).
+- The developer opens the conflicting file in VS Code, where the built-in merge editor provides a visual side-by-side comparison of the **Current Change** (local branch) and the **Incoming Change** (incoming branch).
+- The developer resolves the conflict by selecting the appropriate version — the current change, the incoming change, or a manually authored combination that preserves the functional intent of both contributions.
+- After resolving all conflicts in all affected files, the developer stages the resolved files and completes the merge commit:
+
+```bash
+git add src/main/resources/templates/fragments/layout.html
+git commit -m "merge: resolve conflict in layout.html between admin-dashboard and authentication branches"
+```
+
+- The updated branch is pushed to GitHub, the Pull Request is updated automatically, and the reviewer is notified to re-examine the resolved state.
+
+To minimize conflict frequency, the team follows preventive practices: keeping feature branches narrowly scoped to their designated template module group, communicating proactively about any changes to shared files (`layout.html`, `login.html`, `application.properties`), keeping branches short-lived, and synchronizing with `develop` at the beginning of every development session.
+
+## Database and Shared Resources
+
+The Flight_Ticket_Reservation application uses a MySQL database accessed via Spring Data JPA with the MySQL Connector/J driver (`com.mysql.cj.jdbc.Driver`). The datasource is configured in `application.properties`:
+
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3307/airline_reservation
+spring.datasource.username=airline_user
+spring.datasource.password=airline_pass
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+```
+
+Because the database schema is shared across all modules, any structural changes to an entity (such as adding a field to the `Booking` entity or modifying the `Payment` relationship in `BookingController`) must be communicated to all team members immediately and reflected in the corresponding Thymeleaf templates and repository classes across all feature branches. Schema changes are tracked through dedicated commit messages:
+
+```bash
+git commit -m "refactor: add extra_baggage column to booking_details entity and update booking/new.html form"
+```
+
+Similarly, changes to the shared `static/` directory (adding or removing CSS/JS files referenced in templates via Thymeleaf syntax such as `th:href="@{/css/style.css}"`) are committed to a separate branch and merged before dependent feature branches are submitted for review.
+
+## GitHub Repository Overview
+
+GitHub repository main page showing the repository name (`Flight_Ticket_Reservation`), description, top-level file structure including the `src/main/java/com/airline/reservation/` directory, `src/main/resources/templates/` for Thymeleaf views, `src/main/resources/application.properties`, `pom.xml`, and `docker-compose.yml`. This screenshot confirms the creation of the shared repository and the overall project structure as reflected in the actual source code.
