@@ -169,3 +169,43 @@ Similarly, changes to the shared `static/` directory (adding or removing CSS/JS 
 ## GitHub Repository Overview
 
 GitHub repository main page showing the repository name (`Flight_Ticket_Reservation`), description, top-level file structure including the `src/main/java/com/airline/reservation/` directory, `src/main/resources/templates/` for Thymeleaf views, `src/main/resources/application.properties`, `pom.xml`, and `docker-compose.yml`. This screenshot confirms the creation of the shared repository and the overall project structure as reflected in the actual source code.
+
+## Branch Visualization
+
+GitHub repository Branches tab or Insights → Network graph showing the `main`, `develop`, and feature branches (`feature/authentication-module`, `feature/flight-search`, `feature/booking-workflow`, `feature/admin-dashboard`, `feature/admin-user-management`, `feature/admin-service-management`, `feature/layout-fragments`, `feature/static-assets`). This visualization confirms adherence to the documented branching strategy for each Thymeleaf template module group.
+
+## Merge Conflict Evidence
+
+VS Code merge editor or terminal output showing a merge conflict in a Thymeleaf template (e.g., `layout.html` or `login.html`) and its resolution, with the conflict markers (`<<<<<<< HEAD`, `=======`, `>>>>>>>`) visible alongside the final resolved version. This evidence demonstrates the team's competency in handling concurrent development conflicts in Thymeleaf HTML source files.
+
+## Commit History Evidence
+
+GitHub commit history view showing multiple commits with Conventional Commits-style messages (`feat: add payment processing in BookingController`, `fix: correct JPA relationship mapping in Booking entity`, `merge: resolve conflict in layout.html between admin-dashboard and authentication branches`), author attributions for each team member, and timestamps. This evidence demonstrates consistent, disciplined use of atomic commits mapped to specific Thymeleaf template modules.
+
+## Pull Request Evidence
+
+A Pull Request on GitHub for one of the feature branches (e.g., `feature/booking-workflow` → `develop`), showing the PR title (`feat: booking workflow — payment processing and round-trip support`), the file diff for `BookingController.java` illustrating the payment processing logic and `booking_details` JPA insert operations, reviewer comments, and approval status. This documents the team's code review process and peer quality assurance practice.
+
+## Contributors Evidence
+
+GitHub Insights → Contributors graph showing individual commit activity, additions, and deletions over the project timeline for all three team members. This confirms equitable participation across the authentication, flight-search, booking-workflow, admin-dashboard, admin-user-management, admin-service-management, layout-fragments, and static-assets modules, and sustained engagement throughout the development period.
+
+## Project Overview and Git Workflow
+
+The Flight Ticket Reservation System is a Spring Boot web application that manages two distinct user roles — User and Administrator — each with dedicated pages, authentication flows, and database interactions. The system is built on Spring Boot with Thymeleaf templating, Spring Data JPA connectivity to a MySQL database (`airline_reservation`), and is deployed on an embedded Tomcat server (port 8080).
+
+Given the scope of the project and its multi-role architecture, structured source code management using Git and GitHub is essential. The team adopts a branch-based collaborative workflow inspired by the Gitflow model, adapted to the scale and timeline of the course project. This workflow ensures:
+
+- The `main` branch always reflects a stable, deployable state of the application.
+- Active development and feature integration are consolidated on the `develop` branch before promotion to `main`.
+- All individual module contributions are made through dedicated feature branches originating from `develop`.
+- No direct commits are made to `main` or `develop` — all changes are integrated exclusively via Pull Requests.
+- At least one peer review approval is required before any Pull Request is merged.
+
+The source code is organized following the standard Spring Boot project structure: `src/main/java/com/airline/reservation/` containing controllers, entities, repositories, services, and configuration classes; `src/main/resources/templates/` containing all Thymeleaf HTML templates organized by module (`auth/`, `flight/`, `booking/`, `admin/`, `fragments/`); and `src/main/resources/static/` for CSS and JS assets.
+
+The application entry point is `AirlineReservationApplication.java`, which bootstraps the embedded Tomcat server. All authentication is handled by Spring Security configured in `SecurityConfig.java`, which routes users through `auth/login.html`, queries the `users` table via `UserRepository`, and redirects to the corresponding home page (`index.html` for users, `admin/dashboard.html` for administrators) upon successful credential verification.
+
+## Main Branch Policy
+
+The `main` branch serves as the production-grade branch of the repository. It represents the most recent stable, fully tested version of the Flight Ticket Reservation System. Direct commits to `main` are strictly prohibited. Code is promoted to `main` exclusively via Pull Requests from the `develop` branch, after integration testing has been completed and all primary workflows (login, flight search, booking, payment, admin management) have been verified functional. This ensures that `main` always represents a demonstrable, submission-ready release of the application.
